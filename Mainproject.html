@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tiki Topple - Hackathon Build</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --card: #1f2937;
+      --muted: #94a3b8;
+      --text: #f8fafc;
+      --accent: #22c55e;
+      --accent-2: #38bdf8;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --border: #334155;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    .topbar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .title-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 700px;
+      line-height: 1.4;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 18px;
+    }
+
+    .panel {
+      background: rgba(17, 24, 39, 0.88);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .section-title {
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    .controls, .stats, .players, .rankings {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    label {
+      font-size: 14px;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 100px;
+    }
+
+    input, select, button {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #0b1220;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+
+    button {
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.12s ease, background 0.12s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    .primary { background: #14532d; border-color: #166534; }
+    .info { background: #0c4a6e; border-color: #0369a1; }
+    .warn { background: #78350f; border-color: #b45309; }
+    .danger { background: #7f1d1d; border-color: #b91c1c; }
+
+    .status {
+      padding: 12px;
+      border-radius: 16px;
+      background: #0b1220;
+      border: 1px solid var(--border);
+      line-height: 1.45;
+      color: #e2e8f0;
+      min-height: 76px;
+    }
+
+    .token-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .token {
+      border-radius: 14px;
+      padding: 12px;
+      color: white;
+      font-weight: 700;
+      border: 2px solid rgba(255,255,255,0.15);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+
+    .top-mark {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .board-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .board {
+      display: grid;
+      gap: 10px;
+    }
+
+    .lane {
+      display: grid;
+      grid-template-columns: 120px repeat(7, minmax(60px, 1fr));
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .lane-label, .cell {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      min-height: 62px;
+      padding: 8px;
+    }
+
+    .lane-label {
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      color: #cbd5e1;
+      font-weight: 700;
+    }
+
+    .cell {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+
+    .cell-index {
+      position: absolute;
+      top: 4px;
+      left: 8px;
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .mini {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      border: 2px solid rgba(255,255,255,0.2);
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #0b1220;
+      border: 1px solid var(--border);
+      color: #cbd5e1;
+      font-size: 13px;
+    }
+
+    .player-card, .rank-card {
+      background: #0b1220;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      .lane { grid-template-columns: 100px repeat(7, minmax(50px, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      .action-grid { grid-template-columns: 1fr; }
+      .lane { grid-template-columns: 80px repeat(7, minmax(42px, 1fr)); }
+      .cell, .lane-label { min-height: 56px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title-box">
+        <h1>Tiki Topple - Playable Hackathon Game</h1>
+        <p class="subtitle">
+          Local multiplayer strategy game. On each turn, a player may either move the top 1-3 tokens forward by 1 step or reorder the top 2-3 tokens to control the stack.
+        </p>
+      </div>
+      <div class="row">
+        <button class="primary" id="newGameBtn">New Game</button>
+        <button class="info" id="demoBtn">Load Demo Setup</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <h2 class="section-title">Game Controls</h2>
+
+        <div class="controls">
+          <div class="row">
+            <label>
+              Players
+              <select id="playerCount">
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </label>
+            <label>
+              Tokens per player
+              <select id="tokensPerPlayer">
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="row">
+            <label>
+              Track length
+              <select id="trackLength">
+                <option value="5">5</option>
+                <option value="6" selected>6</option>
+                <option value="7">7</option>
+              </select>
+            </label>
+            <label>
+              Max turns
+              <select id="maxTurns">
+                <option value="20">20</option>
+                <option value="24" selected>24</option>
+                <option value="30">30</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="stats" style="margin-top:16px;">
+          <div class="status" id="statusBox"></div>
+          <div class="row">
+            <span class="pill" id="turnPill">Turn: 1</span>
+            <span class="pill" id="playerPill">Current: Player 1</span>
+          </div>
+        </div>
+
+        <h3 class="section-title" style="margin-top:18px;">Move Action</h3>
+        <div class="row">
+          <button id="move1Btn">Move top 1</button>
+          <button id="move2Btn">Move top 2</button>
+          <button id="move3Btn">Move top 3</button>
+        </div>
+
+        <h3 class="section-title" style="margin-top:18px;">Reorder Action</h3>
+        <div class="small">Choose one reorder pattern for the visible top tokens.</div>
+        <div class="action-grid">
+          <button id="swap2Btn" class="warn">Top 2: swap</button>
+          <button id="rot3LeftBtn" class="warn">Top 3: 1-2-3 → 2-3-1</button>
+          <button id="rot3RightBtn" class="warn">Top 3: 1-2-3 → 3-1-2</button>
+          <button id="rev3Btn" class="warn">Top 3: reverse</button>
+        </div>
+
+        <div class="footer-note">
+          Rules used here: one action per turn, only top tokens can be touched, and scoring is based on final ranking across all tokens. Tokens belong to players, so you want your own colors to finish higher.
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="board-head">
+          <h2 class="section-title" style="margin-bottom:0;">Board + Stack</h2>
+          <span class="pill" id="gameStatePill">Game running</span>
+        </div>
+
+        <div class="board" id="board"></div>
+
+        <div class="row" style="margin-top:18px; align-items:flex-start;">
+          <div style="flex:1; min-width:240px;">
+            <div class="top-mark">Current Stack (top to bottom)</div>
+            <div class="token-stack" id="stackView"></div>
+          </div>
+          <div style="flex:1; min-width:240px;">
+            <h3 class="section-title">Players</h3>
+            <div class="players" id="playersView"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:18px;">
+          <h3 class="section-title">Final Ranking / Live Preview</h3>
+          <div class="rankings" id="rankingsView"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const colors = [
+      { bg: '#ef4444', name: 'Player 1' },
+      { bg: '#3b82f6', name: 'Player 2' },
+      { bg: '#22c55e', name: 'Player 3' },
+      { bg: '#f59e0b', name: 'Player 4' }
+    ];
+
+    let game = null;
+
+    function createGame({ playerCount, tokensPerPlayer, trackLength, maxTurns }) {
+      const players = [];
+      const stack = [];
+      let id = 1;
+
+      for (let p = 0; p < playerCount; p++) {
+        players.push({
+          id: p + 1,
+          name: colors[p].name,
+          color: colors[p].bg,
+          score: 0
+        });
+      }
+
+      for (let p = 0; p < playerCount; p++) {
+        for (let t = 0; t < tokensPerPlayer; t++) {
+          stack.push({
+            id: id++,
+            label: `${p + 1}${String.fromCharCode(65 + t)}`,
+            playerId: p + 1,
+            color: colors[p].bg,
+            position: 0
+          });
+        }
+      }
+
+      return {
+        players,
+        stack,
+        currentPlayerIndex: 0,
+        turn: 1,
+        maxTurns,
+        trackLength,
+        over: false,
+        message: 'Game started. Player 1 goes first.'
+      };
+    }
+
+    function setupGame() {
+      game = createGame({
+        playerCount: Number(document.getElementById('playerCount').value),
+        tokensPerPlayer: Number(document.getElementById('tokensPerPlayer').value),
+        trackLength: Number(document.getElementById('trackLength').value),
+        maxTurns: Number(document.getElementById('maxTurns').value)
+      });
+      render();
+    }
+
+    function loadDemo() {
+      game = createGame({ playerCount: 3, tokensPerPlayer: 2, trackLength: 6, maxTurns: 24 });
+      game.stack = [
+        { ...game.stack.find(t => t.label === '1A'), position: 2 },
+        { ...game.stack.find(t => t.label === '2A'), position: 1 },
+        { ...game.stack.find(t => t.label === '3A'), position: 1 },
+        { ...game.stack.find(t => t.label === '1B'), position: 3 },
+        { ...game.stack.find(t => t.label === '2B'), position: 0 },
+        { ...game.stack.find(t => t.label === '3B'), position: 2 }
+      ];
+      game.currentPlayerIndex = 1;
+      game.turn = 7;
+      game.message = 'Demo loaded. It is Player 2\'s turn.';
+      render();
+    }
+
+    function nextTurn(message) {
+      if (game.over) return;
+
+      if (game.stack.every(token => token.position >= game.trackLength)) {
+        finishGame('All tokens reached the end.');
+        return;
+      }
+
+      if (game.turn >= game.maxTurns) {
+        finishGame('Maximum turns reached.');
+        return;
+      }
+
+      game.currentPlayerIndex = (game.currentPlayerIndex + 1) % game.players.length;
+      game.turn += 1;
+      game.message = message;
+      render();
+    }
+
+    function finishGame(reason) {
+      game.over = true;
+      scoreGame();
+      const winner = [...game.players].sort((a, b) => b.score - a.score)[0];
+      game.message = `${reason} ${winner.name} wins with ${winner.score} points.`;
+      render();
+    }
+
+    function scoreGame() {
+      game.players.forEach(p => p.score = 0);
+      const ranking = getRankedTokens();
+      const total = ranking.length;
+
+      ranking.forEach((token, index) => {
+        const points = total - index;
+        const owner = game.players.find(p => p.id === token.playerId);
+        owner.score += points;
+      });
+    }
+
+    function getRankedTokens() {
+      return [...game.stack].sort((a, b) => {
+        if (b.position !== a.position) return b.position - a.position;
+        return game.stack.indexOf(a) - game.stack.indexOf(b);
+      });
+    }
+
+    function moveTop(count) {
+      if (!validateAction(count, 'move')) return;
+      const top = game.stack.slice(0, count);
+      top.forEach(token => {
+        token.position = Math.min(game.trackLength, token.position + 1);
+      });
+      nextTurn(`${currentPlayer().name} moved top ${count} token${count > 1 ? 's' : ''} forward.`);
+    }
+
+    function reorderTop(mode) {
+      let needed = 0;
+      if (mode === 'swap2') needed = 2;
+      else needed = 3;
+
+      if (!validateAction(needed, 'reorder')) return;
+            
+      const part = game.stack.slice(0, needed);
+      let reordered = [];
+
+      if (mode === 'swap2') reordered = [part[1], part[0]];
+      if (mode === 'rot3Left') reordered = [part[1], part[2], part[0]];
+      if (mode === 'rot3Right') reordered = [part[2], part[0], part[1]];
+      if (mode === 'rev3') reordered = [part[2], part[1], part[0]];
+
+      game.stack.splice(0, needed, ...reordered);
+      nextTurn(`${currentPlayer().name} reordered the top ${needed} tokens.`);
+    }
+
+    function validateAction(count, type) {
+      if (game.over) return false;
+      if (game.stack.length < count) {
+        game.message = `Not enough tokens in stack for that ${type} action.`;
+        render();
+        return false;
+      }
+      return true;
+    }
+
+    function currentPlayer() {
+      return game.players[game.currentPlayerIndex];
+    }
+
+    function render() {
+      if (!game) return;
+      scoreGame();
+
+      document.getElementById('turnPill').textContent = `Turn: ${game.turn} / ${game.maxTurns}`;
+      document.getElementById('playerPill').textContent = `Current: ${currentPlayer().name}`;
+      document.getElementById('statusBox').innerHTML = `
+        <strong>${game.over ? 'Game Over' : currentPlayer().name + '\'s turn'}</strong><br>
+        ${game.message}<br>
+        <span class="small">Choose exactly one action this turn: move the top 1-3 tokens or reorder the top 2-3 tokens.</span>
+      `;
+      document.getElementById('gameStatePill').textContent = game.over ? 'Game over' : 'Game running';
+
+      renderBoard();
+      renderStack();
+      renderPlayers();
+      renderRankings();
+      updateButtons();
+    }
+
+    function renderBoard() {
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+
+      const byPlayer = {};
+      game.players.forEach(p => byPlayer[p.id] = []);
+      game.stack.forEach(token => byPlayer[token.playerId].push(token));
+
+      game.players.forEach(player => {
+        const lane = document.createElement('div');
+        lane.className = 'lane';
+
+        const label = document.createElement('div');
+        label.className = 'lane-label';
+        label.textContent = player.name;
+        lane.appendChild(label);
+
+        for (let pos = 0; pos <= game.trackLength; pos++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+
+          const idx = document.createElement('div');
+          idx.className = 'cell-index';
+          idx.textContent = pos;
+          cell.appendChild(idx);
+
+          byPlayer[player.id]
+            .filter(token => token.position === pos)
+            .forEach(token => {
+              const mini = document.createElement('div');
+              mini.className = 'mini';
+              mini.style.background = token.color;
+              mini.textContent = token.label;
+              mini.title = `${token.label} at ${token.position}`;
+              cell.appendChild(mini);
+            });
+
+          lane.appendChild(cell);
+        }
+
+        board.appendChild(lane);
+      });
+    }
+
+    function renderStack() {
+      const stackView = document.getElementById('stackView');
+      stackView.innerHTML = '';
+
+      game.stack.forEach((token, index) => {
+        const div = document.createElement('div');
+        div.className = 'token';
+        div.style.background = token.color;
+        div.innerHTML = `${index === 0 ? '⬆ TOP · ' : ''}${token.label} · ${getPlayerName(token.playerId)} · position ${token.position}`;
+        stackView.appendChild(div);
+      });
+    }
+
+    function renderPlayers() {
+      const playersView = document.getElementById('playersView');
+      playersView.innerHTML = '';
+
+      game.players.forEach(player => {
+        const owned = game.stack.filter(t => t.playerId === player.id);
+        const card = document.createElement('div');
+        card.className = 'player-card';
+        card.innerHTML = `
+          <strong style="color:${player.color};">${player.name}</strong><br>
+          <span class="small">Tokens: ${owned.map(t => `${t.label}@${t.position}`).join(', ')}</span><br>
+          <span class="small">Live score: ${player.score}</span>
+        `;
+        playersView.appendChild(card);
+      });
+    }
+
+    function renderRankings() {
+      const rankingsView = document.getElementById('rankingsView');
+      rankingsView.innerHTML = '';
+
+      const ranked = getRankedTokens();
+      ranked.forEach((token, index) => {
+        const card = document.createElement('div');
+        card.className = 'rank-card';
+        card.innerHTML = `
+          <strong>#${index + 1} - <span style="color:${token.color};">${token.label}</span></strong><br>
+          <span class="small">${getPlayerName(token.playerId)} · position ${token.position} · points right now: ${ranked.length - index}</span>
+        `;
+        rankingsView.appendChild(card);
+      });
+    }
+
+    function getPlayerName(playerId) {
+      return game.players.find(p => p.id === playerId).name;
+    }
+
+    function updateButtons() {
+      const disabled = game.over;
+      ['move1Btn','move2Btn','move3Btn','swap2Btn','rot3LeftBtn','rot3RightBtn','rev3Btn'].forEach(id => {
+        document.getElementById(id).disabled = disabled;
+      });
+    }
+
+    document.getElementById('newGameBtn').addEventListener('click', setupGame);
+    document.getElementById('demoBtn').addEventListener('click', loadDemo);
+    document.getElementById('move1Btn').addEventListener('click', () => moveTop(1));
+    document.getElementById('move2Btn').addEventListener('click', () => moveTop(2));
+    document.getElementById('move3Btn').addEventListener('click', () => moveTop(3));
+    document.getElementById('swap2Btn').addEventListener('click', () => reorderTop('swap2'));
+    document.getElementById('rot3LeftBtn').addEventListener('click', () => reorderTop('rot3Left'));
+    document.getElementById('rot3RightBtn').addEventListener('click', () => reorderTop('rot3Right'));
+    document.getElementById('rev3Btn').addEventListener('click', () => reorderTop('rev3'));
+
+    setupGame();
+  </script>
+</body>
+</html>
